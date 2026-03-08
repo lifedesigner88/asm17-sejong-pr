@@ -1,0 +1,33 @@
+# OS / Editor
+.DS_Store
+.idea/
+.vscode/
+
+# Node / Nx
+node_modules/
+dist/
+tmp/
+.nx/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.venv/
+venv/
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Local data / generated assets
+data/
+outputs/
+artifacts/
+
