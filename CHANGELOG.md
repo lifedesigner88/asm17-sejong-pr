@@ -53,3 +53,12 @@
 - 결과:
   - VS Code에서 두 작업 폴더를 동시에 운영 가능한 상태가 됨
 
+### Step 5. Runtime Policy Update
+- 무엇:
+  - Node 버전을 `.nvmrc`에서 `22 -> 24`로 변경
+  - `docker-compose.yml`의 frontend 이미지 `node:22-alpine -> node:24-alpine` 변경
+  - `AGENTS.md`에 Node는 `latest LTS` 사용 규칙 추가
+- 왜:
+  - 사용자 선호에 맞춰 Node 런타임을 최신 LTS 기준으로 유지하기 위해
+- 결과:
+  - 현재 Node 기준값은 `24`로 고정됨

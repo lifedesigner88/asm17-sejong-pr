@@ -2,7 +2,7 @@ name: persona-mirror
 
 services:
   frontend:
-    image: node:22-alpine
+    image: node:24-alpine
     working_dir: /workspace
     command: sh -c "echo 'frontend scaffold pending' && tail -f /dev/null"
     volumes:
@@ -51,4 +51,3 @@ services:
 
 volumes:
   postgres_data:
-

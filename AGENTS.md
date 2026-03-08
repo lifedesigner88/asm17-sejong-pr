@@ -8,7 +8,6 @@
 - 작업 시작 시 항상 `README.md`를 먼저 읽고 현재 Phase와 우선순위를 확인한다.
 - 구조/로드맵/기술 방향이 충돌하면, 임의 판단하지 말고 `README.md` 기준으로 맞춘다.
 - 중요한 의사결정이 생기면 코드 변경과 함께 `README.md`도 업데이트한다.
-- 브랜치/커밋 작업은 `README.md`의 `Git Workflow (Learning Mode)`를 따른다.
 
 ## Working Principles
 - 작은 단위로 구현하고, 각 단위가 왜 필요한지 짧게 설명한다.
@@ -27,10 +26,16 @@
   - `infrastructure/terraform`: IaC
 - 인터페이스/스키마 변경 시 관련 소비자(frontend/backend/worker)를 함께 점검한다.
 - AI 추론과 웹 요청 처리는 분리하고, 긴 작업은 비동기로 처리하는 방향을 우선한다.
+- 런타임 기준:
+  - Node는 기본 `latest LTS`를 사용하고 `.nvmrc`에 고정한다.
+  - 현재 기준값은 `24`이다.
+  - Python은 기본 `3.11`을 사용한다.
+  - 이유: FastAPI/LangChain/AI 패키지 호환성과 안정성을 우선하기 위함.
 
 ## Documentation Rules
 - 기능을 추가하면 아래를 함께 갱신한다.
   - 필요 시 `README.md` 체크리스트 상태
+  - `CHANGELOG.md`에 단계별 기록(무엇/왜/결과)
   - 실행 방법(명령어)이 바뀌면 관련 문서
   - API가 바뀌면 요청/응답 예시
 - 사용자가 "설명"을 요청하지 않아도, 큰 구조 변경 시에는 변경 이유를 짧게 남긴다.
