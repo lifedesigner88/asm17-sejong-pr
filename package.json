@@ -7,9 +7,20 @@
     "nx": "nx",
     "dev:frontend": "nx run frontend:dev",
     "dev:backend": "nx run backend:dev",
-    "dev": "nx run-many -t dev -p frontend,backend"
+    "dev": "nx run-many -t dev -p frontend,backend",
+    "lint:frontend": "pnpm exec eslint apps/frontend/src --ext .ts,.tsx --max-warnings=0",
+    "lint:python": "uvx ruff check apps/backend apps/ai-worker",
+    "lint": "pnpm lint:frontend && pnpm lint:python",
+    "format:frontend": "pnpm exec prettier --write .",
+    "format:python": "uvx ruff format apps/backend apps/ai-worker",
+    "format": "pnpm format:frontend && pnpm format:python"
   },
   "devDependencies": {
-    "nx": "^20.7.0"
+    "@eslint/js": "^9.23.0",
+    "eslint": "^9.23.0",
+    "globals": "^16.0.0",
+    "nx": "^20.7.0",
+    "prettier": "^3.5.3",
+    "typescript-eslint": "^8.28.0"
   }
 }

@@ -49,3 +49,9 @@
 
 ### 10) pnpm 버전 상향
 - `package.json`의 `packageManager`를 `pnpm@10.31.0`으로 업데이트
+
+### 11) 공통 린트/포맷/프리커밋 도입
+- 루트에 ESLint/Prettier 설정 추가
+- `pnpm lint`, `pnpm format` 스크립트 추가
+- `.pre-commit-config.yaml` 추가 (frontend lint, python ruff, 문서 prettier check)
+- README Phase 0 체크리스트에서 품질 전략 항목 완료 처리

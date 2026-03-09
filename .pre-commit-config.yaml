@@ -1,0 +1,26 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: check-merge-conflict
+
+  - repo: local
+    hooks:
+      - id: frontend-eslint
+        name: frontend-eslint
+        entry: pnpm lint:frontend
+        language: system
+        pass_filenames: false
+      - id: python-ruff-check
+        name: python-ruff-check
+        entry: uvx ruff check apps/backend apps/ai-worker
+        language: system
+        pass_filenames: false
+      - id: markdown-prettier
+        name: markdown-prettier
+        entry: pnpm exec prettier --check README.md AGENTS.md CHANGELOG.md
+        language: system
+        pass_filenames: false
+

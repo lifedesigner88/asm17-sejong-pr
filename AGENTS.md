@@ -33,6 +33,10 @@
   - Python은 기본 `3.11`을 사용한다.
   - Python 패키지/가상환경 관리는 `uv`를 사용한다.
   - 이유: FastAPI/LangChain/AI 패키지 호환성과 안정성을 우선하기 위함.
+- 품질 기준:
+  - frontend lint: `pnpm lint:frontend` (ESLint)
+  - python lint/format: `uvx ruff`
+  - pre-commit 훅은 `.pre-commit-config.yaml` 기준으로 유지
 
 ## Documentation Rules
 - 기능을 추가하면 아래를 함께 갱신한다.
@@ -53,6 +57,7 @@
 - 사용자 지시 없이 파괴적 명령(`reset --hard`, 대량 삭제 등)을 실행하지 않는다.
 - 기존 변경사항을 임의로 되돌리지 않는다.
 - 보안/개인정보(음성, 이미지, 인터뷰 텍스트) 관련 처리는 보수적으로 설계한다.
+- 최종 커밋 전에는 변경사항 요약을 먼저 공유하고 사용자 승인을 받은 뒤 커밋한다.
 
 ## Default Start-of-Task Checklist
 작업 시작 시 아래 순서로 진행한다.
