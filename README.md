@@ -184,7 +184,9 @@ docker compose down
 - `POST /capture/jobs`
 - `GET /capture/jobs`
 - `GET /capture/jobs/{job_id}`
+- `DELETE /capture/jobs/{job_id}`
 - 프론트는 step-based capture UI를 제공하며, draft는 브라우저 메모리에서 관리하고 review 단계에서 backend job API로 제출한다
+- 제출 이후에는 `My submissions` 화면에서 카드형 목록, 상세 확인, 삭제가 가능하다
 
 ### Health
 - `GET /health`
@@ -306,8 +308,19 @@ uvx pre-commit run --all-files
 - 작은 단위 커밋 유지
 - 최종 커밋 전 변경 요약 확인
 - 승인 후 현재 브랜치를 원격까지 푸시
-- PR은 항상 `main` 최신 기준 새 브랜치에서 생성
-- 이미 PR을 올린 브랜치는 다음 작업에 재사용하지 않음
+
+브랜치 시작 원칙:
+- 독립 작업은 `origin/main` 최신 기준에서 새 브랜치를 만든다.
+- 아직 머지되지 않은 이전 작업 위에 이어지는 의존 작업은, 그 이전 작업 브랜치에서 새 브랜치를 만든다.
+- 즉 `PR 하나 = 브랜치 하나`는 유지하되, 기준점은 항상 `main`만 고정하지 않는다.
+- 이미 PR을 올린 브랜치는 다음 작업에 직접 재사용하지 않고, 필요하면 그 브랜치를 부모로 하는 새 브랜치를 만든다.
+
+PR 운영 원칙:
+- 가능하면 이전 PR을 먼저 머지하고 다음 브랜치를 시작한다.
+- 이전 PR 검토 중에도 다음 작업을 해야 하면 stacked branch 방식으로 이어간다.
+- stacked branch의 새 PR은 필요 시 이전 브랜치를 기준으로 올리고, 아래 PR이 머지된 뒤 `main` 기준으로 다시 정리한다.
+- 이미 merge 된 브랜치는 새 PR을 올리기 전에 정리한다.
+- 기본 정리 대상은 로컬 브랜치와 원격 브랜치 둘 다이며, stacked child가 아직 부모 브랜치를 base로 쓰는 경우에만 정리를 잠시 미룬다.
 
 ## Why This Repo Is Useful For Learners
 이 저장소는 단순한 튜토리얼이 아니라 아래를 같이 보여줍니다.

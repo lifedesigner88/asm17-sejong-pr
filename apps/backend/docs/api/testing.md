@@ -17,9 +17,15 @@ pnpm test:backend
 - 회원가입 / 로그인 / 로그아웃 / `/auth/me`
 - admin 권한 검사
 - capture job 생성 / 목록 / 단건 조회
+- capture job 삭제
 - capture job owner FK 저장 확인
 - admin의 타 사용자 capture job 조회
 - 비로그인 capture 접근 거부
+
+## Fixture Policy
+- 테스트끼리 로그인 상태를 재사용하지 않는다.
+- 대신 `conftest.py`의 `signup_user`, `login_user`, `user_session`, `admin_session` fixture로 반복 setup을 숨긴다.
+- 목표는 "독립성 유지 + 중복 감소"이다.
 
 ## Step 1. Smoke Tests
 목표:
@@ -32,6 +38,7 @@ pnpm test:backend
 - `GET /admin/users`
 - `POST /capture/jobs`
 - `GET /capture/jobs`
+- `DELETE /capture/jobs/{job_id}`
 
 예상 도구:
 - `pytest`
