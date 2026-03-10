@@ -7,6 +7,11 @@ import {
   CaptureLayout,
   CaptureOverviewPage,
   CaptureReviewPage,
+  CaptureSubmissionDetailPage,
+  CaptureSubmissionsPage,
+  captureJobDetailAction,
+  captureJobDetailLoader,
+  captureJobsLoader,
   ImageCapturePage,
   InterviewCapturePage,
   VoiceCapturePage,
@@ -41,6 +46,17 @@ export const router = createBrowserRouter([
           {
             index: true,
             element: <CaptureOverviewPage />,
+          },
+          {
+            path: "submissions",
+            element: <CaptureSubmissionsPage />,
+            loader: captureJobsLoader,
+          },
+          {
+            path: "submissions/:jobId",
+            element: <CaptureSubmissionDetailPage />,
+            loader: captureJobDetailLoader,
+            action: captureJobDetailAction,
           },
           {
             path: "interview",

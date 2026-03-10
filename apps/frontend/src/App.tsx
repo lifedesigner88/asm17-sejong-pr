@@ -2,6 +2,7 @@ import {
   Form,
   NavLink,
   Outlet,
+  isRouteErrorResponse,
   useActionData,
   useLoaderData,
   useNavigation,
@@ -36,6 +37,7 @@ export function App() {
     ...(!sessionUser ? [{ to: "/auth/signup", label: "Sign up" }, { to: "/auth/login", label: "Login" }] : []),
     ...(sessionUser?.is_admin ? [{ to: "/admin/users", label: "Admin users" }] : []),
     { to: "/capture", label: "Capture" },
+    ...(sessionUser ? [{ to: "/capture/submissions", label: "My submissions" }] : []),
   ];
 
   return (
@@ -224,6 +226,16 @@ export function HomePage() {
 
 export function RouteErrorBoundary() {
   const error = useRouteError();
+  if (isRouteErrorResponse(error)) {
+    return (
+      <ShellCard className="mx-auto max-w-2xl border-amber-200 bg-amber-50/90">
+        <StatusPill label={`Route ${error.status}`} tone="warn" />
+        <h2 className="mt-4 text-2xl font-semibold tracking-[-0.03em]">{error.statusText || "Route error"}</h2>
+        <p className="mt-3 text-sm leading-6 text-amber-900">{typeof error.data === "string" ? error.data : "The requested page could not be loaded."}</p>
+      </ShellCard>
+    );
+  }
+
   if (error instanceof Error) {
     return (
       <ShellCard className="mx-auto max-w-2xl border-red-200 bg-red-50/90">

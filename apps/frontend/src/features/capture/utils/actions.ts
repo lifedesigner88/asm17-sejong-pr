@@ -1,20 +1,76 @@
-import { redirect } from "react-router-dom";
+import { redirect, type LoaderFunctionArgs } from "react-router-dom";
 
+import {
+  readCaptureJobResponse,
+  readCaptureJobsResponse,
+  requestCaptureJob,
+  requestCaptureJobs,
+  requestCreateCaptureJob,
+  requestDeleteCaptureJob,
+} from "./api";
 import { clearCaptureDraft, getCompletion, getNextPath, readCaptureDraft, readFileName, saveDraft } from "./storage";
-import type { CaptureLoaderData, CaptureSubmitActionData } from "./types";
+import type {
+  CaptureJobActionData,
+  CaptureJobDetailLoaderData,
+  CaptureJobsLoaderData,
+  CaptureLoaderData,
+  CaptureSubmitActionData,
+} from "./types";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
+async function readApiError(response: Response, fallback: string) {
+  const data = (await response.json().catch(() => null)) as { detail?: string } | null;
+  return data?.detail ?? fallback;
+}
 
-export function captureLoader({ request }: { request: Request }): CaptureLoaderData {
+export function captureLoader(): CaptureLoaderData {
   const draft = readCaptureDraft();
   const completion = getCompletion(draft);
-  const url = new URL(request.url);
   return {
     draft,
     completion,
     progressCount: Object.values(completion).filter(Boolean).length,
     nextPath: getNextPath(completion),
-    submittedJobId: url.searchParams.get("submitted"),
+  };
+}
+
+export async function captureJobsLoader({ request }: LoaderFunctionArgs): Promise<CaptureJobsLoaderData | Response> {
+  const response = await requestCaptureJobs();
+
+  if (response.status === 401) {
+    return redirect("/auth/login");
+  }
+  if (!response.ok) {
+    throw new Error(await readApiError(response, "Failed to load capture submissions."));
+  }
+
+  const url = new URL(request.url);
+  return {
+    jobs: await readCaptureJobsResponse(response),
+    deletedJobId: url.searchParams.get("deleted"),
+  };
+}
+
+export async function captureJobDetailLoader({ params, request }: LoaderFunctionArgs): Promise<CaptureJobDetailLoaderData | Response> {
+  const jobId = params.jobId;
+  if (!jobId) {
+    throw new Error("Capture job id is required.");
+  }
+
+  const response = await requestCaptureJob(jobId);
+  if (response.status === 401) {
+    return redirect("/auth/login");
+  }
+  if (response.status === 404) {
+    throw new Response("Not Found", { status: 404 });
+  }
+  if (!response.ok) {
+    throw new Error(await readApiError(response, "Failed to load capture submission."));
+  }
+
+  const url = new URL(request.url);
+  return {
+    job: await readCaptureJobResponse(response),
+    created: url.searchParams.get("created") === "1",
   };
 }
 
@@ -84,23 +140,44 @@ export async function submitCaptureAction(): Promise<CaptureSubmitActionData | R
     return { error: "Complete interview, voice, and image steps before submitting." };
   }
 
-  const response = await fetch(`${API_BASE_URL}/capture/jobs`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(draft),
-    credentials: "include",
-  });
+  const response = await requestCreateCaptureJob(draft);
 
   if (response.status === 401) {
     return redirect("/auth/login");
   }
 
   if (!response.ok) {
-    const data = (await response.json().catch(() => null)) as { detail?: string } | null;
-    return { error: data?.detail ?? "Failed to create capture job." };
+    return { error: await readApiError(response, "Failed to create capture job.") };
   }
 
-  const data = (await response.json()) as { id: string };
+  const data = await readCaptureJobResponse(response);
   clearCaptureDraft();
-  return redirect(`/capture?submitted=${data.id}`);
+  return redirect(`/capture/submissions/${data.id}?created=1`);
+}
+
+export async function captureJobDetailAction({ params, request }: LoaderFunctionArgs): Promise<CaptureJobActionData | Response> {
+  const jobId = params.jobId;
+  if (!jobId) {
+    throw new Error("Capture job id is required.");
+  }
+
+  const formData = await request.formData();
+  const intent = String(formData.get("intent") ?? "").trim();
+
+  if (intent !== "delete") {
+    return { error: "Unsupported capture job action." };
+  }
+
+  const response = await requestDeleteCaptureJob(jobId);
+  if (response.status === 401) {
+    return redirect("/auth/login");
+  }
+  if (response.status === 404) {
+    return redirect("/capture/submissions");
+  }
+  if (!response.ok) {
+    return { error: await readApiError(response, "Failed to delete capture submission.") };
+  }
+
+  return redirect(`/capture/submissions?deleted=${jobId}`);
 }

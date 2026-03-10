@@ -4,6 +4,7 @@ from typing import Literal, cast
 
 import jwt
 from pwdlib import PasswordHash
+from pwdlib.exceptions import UnknownHashError
 
 JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
 JWT_ALGORITHM = "HS256"
@@ -29,12 +30,18 @@ def hash_password(password: str) -> str:
 
 
 def verify_password(plain_password: str, password_hash: str) -> bool:
-    return password_hasher.verify(plain_password, password_hash)
+    try:
+        return password_hasher.verify(plain_password, password_hash)
+    except UnknownHashError:
+        return False
 
 
 def verify_password_and_update(plain_password: str, password_hash: str) -> tuple[bool, str | None]:
-    is_valid, updated_hash = password_hasher.verify_and_update(plain_password, password_hash)
-    return is_valid, updated_hash
+    try:
+        is_valid, updated_hash = password_hasher.verify_and_update(plain_password, password_hash)
+        return is_valid, updated_hash
+    except UnknownHashError:
+        return False, None
 
 
 def create_access_token(*, subject: str, is_admin: bool) -> str:

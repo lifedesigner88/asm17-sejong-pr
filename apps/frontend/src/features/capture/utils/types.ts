@@ -29,10 +29,32 @@ export type CaptureLoaderData = {
   completion: CaptureCompletion;
   progressCount: number;
   nextPath: string;
-  submittedJobId: string | null;
 };
 
 export type CaptureSubmitActionData = {
+  error?: string;
+};
+
+export type CaptureJob = {
+  id: string;
+  owner_user_id: string;
+  status: string;
+  payload: CaptureDraft;
+  created_at: string;
+  updated_at: string;
+};
+
+export type CaptureJobsLoaderData = {
+  jobs: CaptureJob[];
+  deletedJobId: string | null;
+};
+
+export type CaptureJobDetailLoaderData = {
+  job: CaptureJob;
+  created: boolean;
+};
+
+export type CaptureJobActionData = {
   error?: string;
 };
 

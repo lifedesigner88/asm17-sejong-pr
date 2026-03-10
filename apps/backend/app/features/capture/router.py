@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Response, status
 from sqlalchemy.orm import Session
 
 from app.common.db import get_db
@@ -6,7 +6,7 @@ from app.features.auth.models import User
 from app.features.auth.service import get_current_user
 
 from .schemas import CaptureDraftRequest, CaptureJobResponse
-from .service import create_capture_job, get_capture_job, list_capture_jobs
+from .service import create_capture_job, delete_capture_job, get_capture_job, list_capture_jobs
 
 router = APIRouter(prefix="/capture", tags=["capture"])
 
@@ -35,3 +35,13 @@ def get_job(
     current_user: User = Depends(get_current_user),
 ) -> CaptureJobResponse:
     return get_capture_job(db, job_id, current_user)
+
+
+@router.delete("/jobs/{job_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_job(
+    job_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> Response:
+    delete_capture_job(db, job_id, current_user)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)

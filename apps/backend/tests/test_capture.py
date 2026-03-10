@@ -1,13 +1,8 @@
-
 from sqlalchemy import select
 
 from app.common.db import SessionLocal
 from app.features.auth.models import User
 from app.features.capture.models import CaptureJob
-
-
-def login(client, user_id: str, password: str):
-    return client.post("/auth/login", json={"user_id": user_id, "password": password})
 
 
 def build_capture_payload():
@@ -34,9 +29,8 @@ def build_capture_payload():
     }
 
 
-def test_capture_job_create_list_and_get(client):
-    client.post("/auth/signup", json={"user_id": "alice", "password": "strong-pass-123"})
-    login(client, "alice", "strong-pass-123")
+def test_capture_job_create_list_and_get(user_session):
+    client = user_session()
 
     create_response = client.post("/capture/jobs", json=build_capture_payload())
     assert create_response.status_code == 201
@@ -56,9 +50,8 @@ def test_capture_job_create_list_and_get(client):
     assert get_response.json()["id"] == created_job["id"]
 
 
-def test_capture_job_is_linked_to_user_by_foreign_key(client):
-    client.post("/auth/signup", json={"user_id": "alice", "password": "strong-pass-123"})
-    login(client, "alice", "strong-pass-123")
+def test_capture_job_is_linked_to_user_by_foreign_key(user_session):
+    client = user_session()
 
     create_response = client.post("/capture/jobs", json=build_capture_payload())
     assert create_response.status_code == 201
@@ -81,17 +74,31 @@ def test_capture_job_requires_authentication(client):
     assert response.json()["detail"] == "Authentication required"
 
 
-def test_admin_can_get_another_users_capture_job(client):
-    client.post("/auth/signup", json={"user_id": "alice", "password": "strong-pass-123"})
-    login(client, "alice", "strong-pass-123")
+def test_admin_can_get_another_users_capture_job(user_session, login_user):
+    client = user_session()
 
     create_response = client.post("/capture/jobs", json=build_capture_payload())
     assert create_response.status_code == 201
     created_job = create_response.json()
 
-    login(client, "admin", "Admin#2026!Mirror")
+    login_user("admin", "Admin#2026!Mirror")
     admin_get_response = client.get(f"/capture/jobs/{created_job['id']}")
 
     assert admin_get_response.status_code == 200
     assert admin_get_response.json()["id"] == created_job["id"]
     assert admin_get_response.json()["owner_user_id"] == "alice"
+
+
+def test_owner_can_delete_capture_job(user_session):
+    client = user_session()
+
+    create_response = client.post("/capture/jobs", json=build_capture_payload())
+    assert create_response.status_code == 201
+    created_job = create_response.json()
+
+    delete_response = client.delete(f"/capture/jobs/{created_job['id']}")
+    assert delete_response.status_code == 204
+
+    list_response = client.get("/capture/jobs")
+    assert list_response.status_code == 200
+    assert list_response.json() == []

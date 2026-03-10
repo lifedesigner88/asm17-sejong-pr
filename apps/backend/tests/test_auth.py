@@ -1,17 +1,16 @@
-def test_signup_login_me_and_logout_flow(client):
-    signup_response = client.post(
-        "/auth/signup",
-        json={"user_id": "alice", "password": "strong-pass-123"},
-    )
-    assert signup_response.status_code == 201
+from sqlalchemy import select
+
+from app.common.db import SessionLocal
+from app.features.auth.models import User
+from app.features.auth.service import sync_admin_seed
+
+
+def test_signup_login_me_and_logout_flow(client, signup_user, login_user):
+    signup_response = signup_user()["response"]
     assert signup_response.json()["user_id"] == "alice"
     assert signup_response.json()["is_admin"] is False
 
-    login_response = client.post(
-        "/auth/login",
-        json={"user_id": "alice", "password": "strong-pass-123"},
-    )
-    assert login_response.status_code == 200
+    login_response = login_user()
     assert login_response.json() == {"user_id": "alice", "is_admin": False}
     assert "pm_access_token" in login_response.cookies
 
@@ -25,3 +24,16 @@ def test_signup_login_me_and_logout_flow(client):
 
     me_after_logout = client.get("/auth/me")
     assert me_after_logout.status_code == 401
+
+
+def test_sync_admin_seed_rehashes_unknown_admin_hash():
+    with SessionLocal() as db:
+        admin = db.scalar(select(User).where(User.user_id == "admin"))
+        assert admin is not None
+        admin.password_hash = "legacy-unknown-hash"
+        db.commit()
+
+        sync_admin_seed(db)
+
+        db.refresh(admin)
+        assert admin.password_hash != "legacy-unknown-hash"

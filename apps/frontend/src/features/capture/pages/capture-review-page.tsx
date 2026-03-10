@@ -2,7 +2,7 @@ import { Form, NavLink, useActionData, useNavigation } from "react-router-dom";
 
 import { Badge, Button, Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/common/components";
 
-import { SummaryBlock } from "../components";
+import { CapturePayloadSummary } from "../components";
 import { useCaptureRouteData } from "../utils/hooks";
 import type { CaptureSubmitActionData } from "../utils/types";
 
@@ -29,52 +29,7 @@ export function CaptureReviewPage() {
         </CardHeader>
       </Card>
 
-      <div className="grid gap-4 xl:grid-cols-3">
-        <SummaryBlock title="Interview">
-          <div>
-            <div className="font-medium">Self summary</div>
-            <div>{draft.interview.selfSummary || "Not filled yet."}</div>
-          </div>
-          <div>
-            <div className="font-medium">Core values</div>
-            <div>{draft.interview.coreValues || "Not filled yet."}</div>
-          </div>
-          <div>
-            <div className="font-medium">Speaking style</div>
-            <div>{draft.interview.speakingStyle || "Not filled yet."}</div>
-          </div>
-        </SummaryBlock>
-
-        <SummaryBlock title="Voice">
-          <div>
-            <div className="font-medium">Input mode</div>
-            <div>{draft.voice.inputMode}</div>
-          </div>
-          <div>
-            <div className="font-medium">Sample file</div>
-            <div>{draft.voice.sampleFileName || "No file selected."}</div>
-          </div>
-          <div>
-            <div className="font-medium">Tone notes</div>
-            <div>{draft.voice.toneNotes || "No notes yet."}</div>
-          </div>
-        </SummaryBlock>
-
-        <SummaryBlock title="Image">
-          <div>
-            <div className="font-medium">Input mode</div>
-            <div>{draft.image.inputMode}</div>
-          </div>
-          <div>
-            <div className="font-medium">Reference file</div>
-            <div>{draft.image.referenceFileName || "No file selected."}</div>
-          </div>
-          <div>
-            <div className="font-medium">Visual direction</div>
-            <div>{draft.image.visualDirection || "No direction yet."}</div>
-          </div>
-        </SummaryBlock>
-      </div>
+      <CapturePayloadSummary payload={draft} />
 
       <Card className="bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(243,248,248,0.95))]">
         <CardContent className="space-y-4 px-6 py-6">

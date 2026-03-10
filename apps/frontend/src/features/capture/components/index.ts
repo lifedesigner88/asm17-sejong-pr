@@ -1,5 +1,8 @@
 export { CapturePageActions } from "./capture-page-actions";
 export { CapturePageShell } from "./capture-page-shell";
+export { CaptureJobCard } from "./capture-job-card";
+export { CaptureJobStatusBadge } from "./capture-job-status-badge";
+export { CapturePayloadSummary } from "./capture-payload-summary";
 export { ChoiceCard } from "./choice-card";
 export { StepLink } from "./step-link";
 export { SummaryBlock } from "./summary-block";

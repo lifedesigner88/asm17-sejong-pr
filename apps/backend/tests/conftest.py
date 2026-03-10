@@ -24,6 +24,9 @@ from app.common.db import Base, SessionLocal, engine
 from app.features.auth.service import sync_admin_seed
 from app.main import app
 
+DEFAULT_PASSWORD = "strong-pass-123"
+ADMIN_PASSWORD = "Admin#2026!Mirror"
+
 
 @pytest.fixture(autouse=True)
 def reset_database():
@@ -38,3 +41,39 @@ def reset_database():
 def client():
     with TestClient(app) as test_client:
         yield test_client
+
+
+@pytest.fixture()
+def signup_user(client):
+    def _signup_user(user_id: str = "alice", password: str = DEFAULT_PASSWORD):
+        response = client.post("/auth/signup", json={"user_id": user_id, "password": password})
+        assert response.status_code == 201
+        return {"user_id": user_id, "password": password, "response": response}
+
+    return _signup_user
+
+
+@pytest.fixture()
+def login_user(client):
+    def _login_user(user_id: str = "alice", password: str = DEFAULT_PASSWORD):
+        response = client.post("/auth/login", json={"user_id": user_id, "password": password})
+        assert response.status_code == 200
+        return response
+
+    return _login_user
+
+
+@pytest.fixture()
+def user_session(client, signup_user, login_user):
+    def _user_session(user_id: str = "alice", password: str = DEFAULT_PASSWORD):
+        signup_user(user_id, password)
+        login_user(user_id, password)
+        return client
+
+    return _user_session
+
+
+@pytest.fixture()
+def admin_session(client, login_user):
+    login_user("admin", ADMIN_PASSWORD)
+    return client
