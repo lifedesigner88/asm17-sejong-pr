@@ -78,11 +78,21 @@ Why LangGraph:
 
 Three git worktrees run in parallel for the March 25 MVP:
 
-| Workspace | Path | Branch | Scope |
-|-----------|------|--------|-------|
-| main | `/home/sejong/260309_persona-mirror` | `main` | merge only |
-| work1 | `/home/sejong/persona-mirror-work1` | `feat/email-signup` | Backend — Steps 1→2→3 |
-| work2 | `/home/sejong/persona-mirror-work2` | `feat/frontend-mvp` | Frontend — Steps 4→6 |
+| Workspace | Path | Branch | Frontend | Backend | Scope |
+|-----------|------|--------|----------|---------|-------|
+| main | `/home/sejong/260309_persona-mirror` | `main` | 3000 | 8000 | merge only |
+| work1 | `/home/sejong/persona-mirror-work1` | `feat/email-signup` | 3001 | 8001 | Backend Steps 1→2→3 |
+| work2 | `/home/sejong/persona-mirror-work2` | `feat/frontend-mvp` | 3002 | 8002 | Frontend Steps 4→6 |
+
+### Port Policy
+- Each workspace uses dedicated ports to avoid conflicts when running simultaneously.
+- `VITE_API_BASE_URL` and `BACKEND_CORS_ORIGINS` must match the workspace's port pair.
+
+| Workspace | `VITE_API_BASE_URL` | `BACKEND_CORS_ORIGINS` |
+|-----------|---------------------|------------------------|
+| main | `http://localhost:8000` | `http://localhost:3000` |
+| work1 | `http://localhost:8001` | `http://localhost:3001` |
+| work2 | `http://localhost:8002` | `http://localhost:3002` |
 
 Open each path as a separate VS Code window to work in parallel.
 

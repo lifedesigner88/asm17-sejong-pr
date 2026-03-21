@@ -12,15 +12,21 @@ Build PersonaMirror step by step — not just fast, but in a way that makes stru
 
 ## Parallel Worktree Setup
 
-| Workspace | Path | Branch | Scope |
-|-----------|------|--------|-------|
-| main | `/home/sejong/260309_persona-mirror` | `main` | merge only — no direct work |
-| work1 | `/home/sejong/persona-mirror-work1` | `feat/email-signup` | Backend (Steps 1→2→3) |
-| work2 | `/home/sejong/persona-mirror-work2` | `feat/frontend-mvp` | Frontend (Steps 4→6) |
+| Workspace | Path | Branch | Frontend | Backend | Scope |
+|-----------|------|--------|----------|---------|-------|
+| main | `/home/sejong/260309_persona-mirror` | `main` | 3000 | 8000 | merge only |
+| work1 | `/home/sejong/persona-mirror-work1` | `feat/email-signup` | 3001 | 8001 | Backend Steps 1→2→3 |
+| work2 | `/home/sejong/persona-mirror-work2` | `feat/frontend-mvp` | 3002 | 8002 | Frontend Steps 4→6 |
 
-Rules:
+### Port Policy
+- Each workspace runs on dedicated ports to avoid conflicts when running simultaneously.
+- Frontend port is set via `vite.config.ts` `server.port` or `VITE_PORT` env var.
+- Backend port is set via uvicorn `--port` arg or `BACKEND_PORT` env var.
+- `VITE_API_BASE_URL` and `BACKEND_CORS_ORIGINS` must match the workspace's port pair.
+
+### Worktree Rules
 - `main` is updated **only via PR** — never commit or push directly to `main`.
-- work1 and work2 push to their own branches (`feat/email-signup`, `feat/frontend-mvp`) and open a PR to `main`.
+- work1 and work2 push to their own branches and open a PR to `main`.
 - PR must be reviewed and approved before merging.
 - When adding a new worktree: `git worktree add <path> <branch>` from the main repo.
 - When done: PR merged → `git worktree remove <path>` → delete remote branch.
