@@ -47,9 +47,12 @@ Goal: full AI pipeline → shareable Level 1 persona card
 - [x] `/persona/demo` — Hupository data, no backend needed
 - [x] Capture routes auth-gated (nav hidden + route redirect on 401)
 - [x] Dev environment: `.env` files created, model set to `claude-haiku-4-5` for cost
-- [ ] `GET /persona/:id` real backend endpoint ← **next**
+- [x] `GET /persona/:id` real backend endpoint (personas table + router)
 - [ ] `POST /persona/:id/ask` Q&A panel backend endpoint
 - [ ] DB volume reset required (new columns: `result`, `persona_id`)
+- [ ] Production Docker images: frontend nginx build, backend
+- [ ] GHCR CI: build + push `persona-mirror-frontend` and `persona-mirror-backend`
+- [ ] Deploy to `asm.huposit.kr` via 260312-demo-infra (Caddy + compose) `2026-03-22`
 
 ---
 
@@ -82,6 +85,7 @@ Goal: production-ready
 
 ## Next Recommended Work
 
-1. `GET /persona/:id` — real backend endpoint so `/persona/demo` can be replaced with real user profiles
-2. `POST /persona/:id/ask` — Q&A panel AI answer
-3. DB volume reset on next local deploy (run `docker compose down -v && docker compose up`)
+1. Production Docker images + GHCR CI for frontend and backend
+2. Deploy to `asm.huposit.kr` via 260312-demo-infra (Caddy routing + compose)
+3. `POST /persona/:id/ask` — Q&A panel AI answer
+4. DB volume reset on next local deploy (run `docker compose down -v && docker compose up`)

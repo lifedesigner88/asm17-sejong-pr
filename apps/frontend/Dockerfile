@@ -1,4 +1,4 @@
-FROM node:24.11.0-alpine
+FROM node:24.11.0-alpine AS builder
 
 WORKDIR /workspace
 
@@ -11,8 +11,15 @@ RUN pnpm install --filter frontend... --frozen-lockfile=false
 
 COPY apps/frontend ./apps/frontend
 
+ARG VITE_API_BASE_URL
+ENV VITE_API_BASE_URL=${VITE_API_BASE_URL}
+
 WORKDIR /workspace/apps/frontend
+RUN pnpm build
 
-EXPOSE 3000
+FROM nginx:1.27-alpine
 
-CMD ["pnpm", "dev", "--host", "0.0.0.0", "--port", "3000"]
+COPY --from=builder /workspace/apps/frontend/dist /usr/share/nginx/html
+COPY apps/frontend/nginx.conf /etc/nginx/conf.d/default.conf
+
+EXPOSE 80

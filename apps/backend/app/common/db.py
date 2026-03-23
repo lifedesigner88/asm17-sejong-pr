@@ -12,6 +12,9 @@ engine_kwargs: dict = {"future": True, "pool_pre_ping": True}
 if DATABASE_URL.startswith("sqlite"):
     # Tests use SQLite and need cross-thread access inside TestClient.
     engine_kwargs["connect_args"] = {"check_same_thread": False}
+elif "pooler.supabase.com" in DATABASE_URL:
+    # Supabase transaction pooler (PgBouncer) does not support prepared statements.
+    engine_kwargs["connect_args"] = {"prepare_threshold": None}
 
 engine = create_engine(DATABASE_URL, **engine_kwargs)
 

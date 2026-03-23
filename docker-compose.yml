@@ -22,16 +22,10 @@ services:
     environment:
       UV_PROJECT_ENVIRONMENT: /tmp/persona-backend-venv
       UV_LINK_MODE: copy
-      DATABASE_URL: postgresql+psycopg://persona:persona@db:5432/persona_mirror
     volumes:
       - ./:/workspace
     ports:
       - "8000:8000"
-    depends_on:
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_started
 
   ai-worker:
     image: python:3.11.15-slim
@@ -42,34 +36,8 @@ services:
     environment:
       UV_PROJECT_ENVIRONMENT: /tmp/persona-ai-worker-venv
       UV_LINK_MODE: copy
-      DATABASE_URL: postgresql+psycopg://persona:persona@db:5432/persona_mirror
     volumes:
       - ./:/workspace
-    depends_on:
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_started
-
-  db:
-    image: postgres:16.13-alpine
-    env_file:
-      - compose.env
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
-      interval: 2s
-      timeout: 3s
-      retries: 15
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-
-  redis:
-    image: redis:7.4.7-alpine
-    ports:
-      - "6379:6379"
 
 volumes:
-  postgres_data:
   frontend_node_modules:
