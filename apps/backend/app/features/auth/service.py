@@ -33,7 +33,11 @@ def to_user_response(user: User) -> UserResponse:
 
 
 def sync_admin_seed(db: Session) -> None:
-    admin = db.scalar(select(User).where(User.user_id == ADMIN_SEED_USER_ID))
+    admin = db.scalar(
+        select(User).where(
+            (User.user_id == ADMIN_SEED_USER_ID) | (User.email == ADMIN_SEED_EMAIL)
+        )
+    )
     if admin is None:
         db.add(
             User(
