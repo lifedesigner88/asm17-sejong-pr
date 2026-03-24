@@ -22,10 +22,39 @@ const ROOMS = [1, 2, 3, 4, 5];
 const DISPLAY_COLUMNS = 5;
 const COMMUNITY_TARGET_MEMBERS = 300;
 const WORKSHOP_START_AT = new Date("2026-04-03T13:00:00+09:00").getTime();
+const DEMO_CARD_SEEN_STORAGE_KEY = "asm17:demo-card:seen";
 
 type SelectedSlot = { date: string; timeSlot: number; room: number };
 type SlotSummary = { filled: number; male: number; female: number };
 type CountdownParts = { days: number; hours: number; minutes: number; seconds: number };
+type SlotDialogCard = MemberCard & { previewState?: "demo" | "locked" };
+
+const DEMO_PREVIEW_CARDS: SlotDialogCard[] = [
+  {
+    seat: 1,
+    user_id: 1,
+    name: "박세종",
+    birth_year: 1988,
+    residence: "서울시 은평구",
+    gender: "M",
+    email: "lifedesigner88@gmail.com",
+    github_address: "https://github.com/lifedesigner88",
+    notion_url: "https://leq88.notion.site/17-ee16712aabe583dda7d60117e4c87ad1",
+    previewState: "demo"
+  },
+  ...Array.from({ length: 4 }, (_, index) => ({
+    seat: index + 2,
+    user_id: -1 * (index + 2),
+    name: null,
+    birth_year: null,
+    residence: null,
+    gender: null,
+    email: null,
+    github_address: null,
+    notion_url: null,
+    previewState: "locked" as const
+  }))
+];
 
 function slotKey(date: string, timeSlot: number, room: number) {
   return `${date}|${timeSlot}|${room}`;
@@ -314,9 +343,22 @@ function MemberIconLink({
   );
 }
 
-function MemberCardItem({ card }: { card: MemberCard }) {
+function MemberCardItem({ card }: { card: SlotDialogCard }) {
   const [copied, setCopied] = useState(false);
+  const [demoSeen, setDemoSeen] = useState(false);
   const inlineProfile = [card.birth_year ? `${card.birth_year}` : null, card.residence].filter(Boolean);
+
+  useEffect(() => {
+    if (card.previewState !== "demo") {
+      return;
+    }
+
+    try {
+      setDemoSeen(window.localStorage.getItem(DEMO_CARD_SEEN_STORAGE_KEY) === "true");
+    } catch {
+      setDemoSeen(false);
+    }
+  }, [card.previewState]);
 
   function copyEmail() {
     if (!card.email) return;
@@ -324,6 +366,26 @@ function MemberCardItem({ card }: { card: MemberCard }) {
       setCopied(true);
       window.setTimeout(() => setCopied(false), 1500);
     });
+  }
+
+  function toggleDemoSeen() {
+    const nextValue = !demoSeen;
+    setDemoSeen(nextValue);
+
+    try {
+      window.localStorage.setItem(DEMO_CARD_SEEN_STORAGE_KEY, String(nextValue));
+    } catch {
+      // Ignore storage failures and keep the local UI state only.
+    }
+  }
+
+  if (card.previewState === "locked") {
+    return (
+      <div className="flex min-h-[188px] flex-col items-center justify-center rounded-2xl border border-dashed border-pink-200 bg-pink-50/85 p-4 text-center">
+        <span className="text-sm font-semibold text-pink-800">17기 인증 후</span>
+        <span className="mt-1 text-[11px] text-pink-700/80">열람 가능</span>
+      </div>
+    );
   }
 
   if (!card.user_id) {
@@ -348,15 +410,31 @@ function MemberCardItem({ card }: { card: MemberCard }) {
       }`}
     >
       <div className="min-h-0">
-        <p className="line-clamp-2 text-base font-semibold leading-tight text-foreground/95">
-          {card.name ?? "—"}
-          {inlineProfile.length > 0 && (
-            <span className="text-[13px] font-medium text-muted-foreground">
-              {" "}
-              ({inlineProfile.join(" · ")})
-            </span>
+        <div className="flex items-start justify-between gap-3">
+          <p className="line-clamp-2 text-base font-semibold leading-tight text-foreground/95">
+            {card.name ?? "—"}
+            {inlineProfile.length > 0 && (
+              <span className="text-[13px] font-medium text-muted-foreground">
+                {" "}
+                ({inlineProfile.join(" · ")})
+              </span>
+            )}
+            {card.previewState === "demo" && (
+              <span className="text-[12px] font-medium text-muted-foreground/80"> - 예시</span>
+            )}
+          </p>
+
+          {card.previewState === "demo" && (
+            <label className="flex shrink-0 items-center">
+              <input
+                type="checkbox"
+                checked={demoSeen}
+                onChange={toggleDemoSeen}
+                className="h-3.5 w-3.5 rounded border-border/60 accent-emerald-500"
+              />
+            </label>
           )}
-        </p>
+        </div>
         {inlineProfile.length === 0 && (
           <p className="mt-1 text-[11px] text-muted-foreground">출생연도 / 거주지역 미입력</p>
         )}
@@ -415,7 +493,7 @@ export function DashboardPage() {
   const [loadingGrid, setLoadingGrid] = useState(true);
   const [selected, setSelected] = useState<SelectedSlot | null>(null);
   const [activeTimeSlot, setActiveTimeSlot] = useState<number | null>(null);
-  const [members, setMembers] = useState<MemberCard[] | null>(null);
+  const [members, setMembers] = useState<SlotDialogCard[] | null>(null);
   const [membersError, setMembersError] = useState<string | null>(null);
   const [loadingMembers, setLoadingMembers] = useState(false);
   const [countdown, setCountdown] = useState<CountdownParts>(() => getCountdownParts(Date.now()));
@@ -469,6 +547,12 @@ export function DashboardPage() {
     setMembers(null);
     setMembersError(null);
     setLoadingMembers(true);
+
+    if (!canViewSlotMembers) {
+      setLoadingMembers(false);
+      setMembers(DEMO_PREVIEW_CARDS);
+      return;
+    }
 
     const result = await fetchSlotMembers(date, timeSlot, room);
 
@@ -770,11 +854,6 @@ export function DashboardPage() {
               {membersError && (
                 <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
                   <p className="text-sm text-amber-700">{membersError}</p>
-                  {!sessionUser && (
-                    <Button className="mt-3" size="sm" onClick={() => navigate("/auth/login")}>
-                      로그인하기
-                    </Button>
-                  )}
                   {sessionUser &&
                     !sessionUser.is_admin &&
                     sessionUser.applicant_status !== "approved" && (

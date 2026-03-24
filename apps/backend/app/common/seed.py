@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import os
+from datetime import date, time
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -14,6 +15,18 @@ DEMO_USER_EMAIL = os.getenv("DEMO_USER_EMAIL", "lifedesigner88@gmail.com")
 DEMO_USER_PIN   = os.getenv("DEMO_USER_PIN",   "1234")                 # login: email + 1234
 DEMO_PERSONA_ID = os.getenv("DEMO_PERSONA_ID", "sejong")               # /persona/sejong
 DEMO_PERSONA_TITLE = "박세종 · SW Maestro 17 Team Building"
+DEMO_USER_NAME = "박세종"
+DEMO_USER_GENDER = "M"
+DEMO_USER_BIRTH_DATE = date(1988, 9, 12)
+DEMO_USER_RESIDENCE = "서울시 은평구"
+DEMO_USER_PHONE = os.getenv("DEMO_USER_PHONE")
+DEMO_USER_INTERVIEW_DATE = date(2026, 3, 20)
+DEMO_USER_INTERVIEW_START_TIME = time(9, 30)
+DEMO_USER_INTERVIEW_TIME_SLOT = 1
+DEMO_USER_INTERVIEW_ROOM = 1
+DEMO_USER_APPLICANT_STATUS = "approved"
+DEMO_USER_GITHUB = "https://github.com/lifedesigner88"
+DEMO_USER_NOTION = "https://leq88.notion.site/17-ee16712aabe583dda7d60117e4c87ad1"
 
 _DATA_ENG: dict = {
     "archetype": "Founder-PM for Education, Community, and AI",
@@ -537,14 +550,37 @@ def sync_demo_seed(db: Session) -> None:
             password_hash=hash_password(DEMO_USER_PIN),
             is_verified=True,
             is_admin=False,
-            github_address="https://github.com/lifedesigner88",
-            notion_url="https://leq88.notion.site/17-ee16712aabe583dda7d60117e4c87ad1",
+            name=DEMO_USER_NAME,
+            gender=DEMO_USER_GENDER,
+            birth_date=DEMO_USER_BIRTH_DATE,
+            residence=DEMO_USER_RESIDENCE,
+            phone=DEMO_USER_PHONE,
+            interview_date=DEMO_USER_INTERVIEW_DATE,
+            interview_start_time=DEMO_USER_INTERVIEW_START_TIME,
+            interview_time_slot=DEMO_USER_INTERVIEW_TIME_SLOT,
+            interview_room=DEMO_USER_INTERVIEW_ROOM,
+            applicant_status=DEMO_USER_APPLICANT_STATUS,
+            github_address=DEMO_USER_GITHUB,
+            notion_url=DEMO_USER_NOTION,
         )
         db.add(user)
         db.flush()  # get user into session before persona FK
     else:
-        user.github_address = "https://github.com/lifedesigner88"
-        user.notion_url = "https://leq88.notion.site/17-ee16712aabe583dda7d60117e4c87ad1"
+        user.is_verified = True
+        user.is_admin = False
+        user.name = DEMO_USER_NAME
+        user.gender = DEMO_USER_GENDER
+        user.birth_date = DEMO_USER_BIRTH_DATE
+        user.residence = DEMO_USER_RESIDENCE
+        if DEMO_USER_PHONE is not None:
+            user.phone = DEMO_USER_PHONE
+        user.interview_date = DEMO_USER_INTERVIEW_DATE
+        user.interview_start_time = DEMO_USER_INTERVIEW_START_TIME
+        user.interview_time_slot = DEMO_USER_INTERVIEW_TIME_SLOT
+        user.interview_room = DEMO_USER_INTERVIEW_ROOM
+        user.applicant_status = DEMO_USER_APPLICANT_STATUS
+        user.github_address = DEMO_USER_GITHUB
+        user.notion_url = DEMO_USER_NOTION
 
     # ── Persona ───────────────────────────────────────────────────────────────
     existing = db.scalar(select(Persona).where(Persona.persona_id == DEMO_PERSONA_ID))
