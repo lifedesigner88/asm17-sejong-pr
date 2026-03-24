@@ -13,13 +13,24 @@
     "copiedBtn": "Done"
   },
   "creatorIntro": {
-    "badge": "Creator note",
-    "title": "I built a demo version of the service I want to create.",
-    "description": "This is my introduction page, created after AI read through 19 years of my life. If you log in, you can ask me simple questions based on my data, and every question and answer is recorded.",
-    "contact": "If you'd like to team up with me and help grow this service, please send me an email at the address below.",
+    "badge": "Real team-building PR",
+    "title": "This page should show what kind of team picture appears when we build together, not just whether I seem like a nice person.",
+    "description": "This is not just a persona demo page. It is a Creator PR page built so the right SW Maestro 17 teammates can decide quickly whether we should team up.",
+    "contact": "If you feel close to one of the two owner roles below, I would love to talk before team building. Please use the email below.",
     "repoButton": "View Hupository",
     "emailCopy": "Copy",
     "emailCopied": "Copied"
+  },
+  "creatorPr": {
+    "heroRole": "Strongest role",
+    "teamSectionLabel": "Looking for teammates",
+    "teamSectionTitle": "The team is strongest when these two owners join.",
+    "avoidMatches": "Probably not a fit",
+    "projectSectionLabel": "Project direction",
+    "whyNow": "Why now",
+    "whyMe": "Why me",
+    "ctaSectionLabel": "Call to action",
+    "contactButton": "Copy email"
   },
   "mbti": {
     "typeLabel": "MBTI type",

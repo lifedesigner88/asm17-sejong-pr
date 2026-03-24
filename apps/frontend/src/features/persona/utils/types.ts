@@ -35,6 +35,41 @@ export type TeamUpProfile = {
   looking_for: string[];
 };
 
+export type CreatorPrQuickFact = {
+  label: string;
+  value: string;
+};
+
+export type CreatorPrRole = {
+  title: string;
+  summary: string;
+  bullets: string[];
+};
+
+export type CreatorPrSection = {
+  title: string;
+  summary: string;
+  bullets: string[];
+};
+
+export type CreatorPrCta = {
+  title: string;
+  body: string;
+};
+
+export type CreatorPrProfile = {
+  event_badge: string;
+  event_note: string;
+  role_summary: string;
+  quick_facts: CreatorPrQuickFact[];
+  teammate_roles: CreatorPrRole[];
+  avoid_matches: string[];
+  project: CreatorPrSection;
+  why_now: CreatorPrSection;
+  why_me: CreatorPrSection;
+  cta: CreatorPrCta;
+};
+
 export type MbtiProfile = {
   type: string; // e.g. "INFJ"
   identity: "A" | "T"; // Assertive | Turbulent
@@ -65,6 +100,7 @@ export type PersonaProfile = {
   watchouts: string[];
   goals_vision: GoalsVision;
   team_up?: TeamUpProfile;
+  creator_pr?: CreatorPrProfile;
   fit_vectors: FitVectors;
   sdg_alignment: SdgAlignment[];
   identity_shifts: IdentityShift[];
