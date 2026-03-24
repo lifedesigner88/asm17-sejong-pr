@@ -18,7 +18,6 @@
   "sidebar": {
     "phase": "AI SW Maestro",
     "tagline": "Find your 450 fellow 17th-cohort members across Seoul and Busan, and get ready for team building.",
-    "openChat": "Open chat",
     "directInquiry": "1:1 inquiry",
     "currentBaseline": "Current baseline",
     "sessionTitle": "Session",
@@ -30,28 +29,136 @@
     "footer": "Signup, approval, and dashboard access are the current product focus."
   },
   "home": {
-    "pill": "Community refactor",
-    "heading": "The product is being reshaped into a community service for Software Maestro members.",
-    "description": "Current priority is email signup, 17th cohort verification, admin approval, and the interview dashboard. Persona features stay in the codebase only as a future team-building extension with the creator profile as demo data.",
+    "pill": "ASM17 Team Building",
+    "heading": "A community app for ASM17 pre-team-building discovery",
+    "description": "Chat links alone are not enough, so this helps people review GitHub and intro links based on information from others who interviewed together.",
+    "visibilityNote": "Member info is only visible among email accounts approved as 17th-cohort members.",
     "loggedIn": "logged in: {{userId}}",
     "guestMode": "guest mode",
     "adminAccess": "admin access",
-    "checkBackend": "Check backend health",
-    "checkingBackend": "Checking backend...",
-    "createAccount": "Create community account",
-    "runtimeSignal": "Runtime signal",
-    "backendApi": "Backend API",
-    "authMode": "Auth mode",
-    "authModeValue": "httpOnly cookie",
-    "healthState": "Health state",
-    "cards": {
-      "authTitle": "Signup and verification",
-      "authText": "Email OTP, 4-digit PIN login, and applicant approval flow are already connected.",
-      "uiTitle": "Dashboard first",
-      "uiText": "The interview dashboard is becoming the core member experience, with mobile scanning as the main design constraint.",
-      "nextTitle": "Next step",
-      "nextText": "Seoul/Busan team segmentation, real interview schedule cleanup, and community profiles are the next major pieces."
-    }
+    "runtimeLabel": "Small playful button",
+    "runtimeTitle": "Poke backend",
+    "runtimeButton": "Poke backend",
+    "runtimeButtonLoading": "Poking...",
+    "runtimeLatency": "Response time",
+    "runtimeLatencyIdle": "-",
+    "runtimeLatencyValue": "{{ms}}ms",
+    "runtimeStatusIdle": "Idle",
+    "runtimeStatusOk": "Healthy",
+    "runtimeStatusFailed": "Failed",
+    "keywords": [
+      "17th-cohort verification",
+      "People interviewed together",
+      "GitHub",
+      "Notion intro",
+      "AI chatbot",
+      "17th-cohort chat room",
+      "Offline meetup",
+      "Pre-team-building discovery"
+    ],
+    "flowLabel": "Current core flow",
+    "flowTitle": "From signup to pre-team-building discovery",
+    "flowSteps": [
+      {
+        "title": "Sign up",
+        "text": "Create an account with email and PIN."
+      },
+      {
+        "title": "17th-cohort verification",
+        "text": "Enter approval-related info and move into the verification flow."
+      },
+      {
+        "title": "Add interview info",
+        "text": "Enter interview date and start time."
+      },
+      {
+        "title": "Connect profile links",
+        "text": "Add GitHub and self-introduction Notion links."
+      },
+      {
+        "title": "Review people interviewed together",
+        "text": "Start by looking at GitHub and intro links from people who interviewed together."
+      },
+      {
+        "title": "Decide faster",
+        "text": "Narrow down who may be worth talking to before team building."
+      }
+    ],
+    "featuresLabel": "Key features",
+    "featuresTitle": "What is currently built",
+    "featuresSummary": "The current scope is easier to scan as working units rather than long descriptions.",
+    "featureItems": [
+      "Signup",
+      "Login",
+      "PIN reset",
+      "17th-cohort verification",
+      "Interview schedule input",
+      "GitHub link",
+      "Notion intro link",
+      "People interviewed together",
+      "Talk with AI Sejong",
+      "Creator PR",
+      "Admin approval",
+      "Korean / English UI"
+    ],
+    "futureLabel": "Future direction",
+    "futureTitle": "Features under consideration if enough members join",
+    "futureSummary": "The current focus is pre-team-building discovery. If enough members sign up later, I want to consider expanding into direction-based recommendations and related tools.",
+    "futureItems": [
+      "Similar-vision recommendations",
+      "AI-assisted matching",
+      "Team-building shortlist",
+      "Richer participant profiles"
+    ]
+  },
+  "dashboard": {
+    "pill": "AI Software Maestro 17th Cohort",
+    "title": "Seoul Applicant Dashboard",
+    "introLine1": "Right now, 500 seats are open based on 4 days x 5 time slots x 5 tracks x 5 people.",
+    "introLine2": "The dashboard board uses five dots per track so people can scan it as quickly as possible.",
+    "legendRow": "1 row = 1 track",
+    "legendMale": "Male",
+    "legendFemale": "Female",
+    "legendEmpty": "Unfilled",
+    "accessNote": "17th-cohort info becomes available after 17th-cohort verification.",
+    "countdownTitle": "Until Seoul Workshop",
+    "countdownDate": "2026.04.03 (Fri) 13:00 · Yangpyeong",
+    "countdownBadge": "D-Day",
+    "countdownDay": "Day",
+    "countdownHour": "Hour",
+    "countdownMin": "Min",
+    "countdownSec": "Sec",
+    "approvedSuffix": "/{{count}}",
+    "loading": "Loading...",
+    "loadFailed": "Failed to load data.",
+    "roomLabel": "Track {{room}}",
+    "dialogClose": "Close",
+    "dialogCloseAria": "Close slot details",
+    "memberMissingTitle": "Not applied",
+    "memberMissingBody": "No member info has been added yet.",
+    "lockedLine1": "Available after",
+    "lockedLine2": "17th-cohort verification",
+    "missingProfile": "Birth year / residence not entered",
+    "demoSuffix": "- Example",
+    "demoSeenAria": "Mark example card as seen",
+    "memberSeenAria": "Mark member as checked",
+    "actionEmail": "Email",
+    "actionEmailCopied": "Copied",
+    "actionGithub": "GitHub",
+    "actionNotion": "Notion",
+    "emailCopyTitle": "Copy email: {{email}}",
+    "emailUnavailableTitle": "No email",
+    "githubOpenTitle": "Open GitHub: {{url}}",
+    "githubUnavailableTitle": "No GitHub link",
+    "notionOpenTitle": "Open Notion: {{url}}",
+    "notionUnavailableTitle": "No Notion link",
+    "apiDashboardLoadFailed": "Failed to load dashboard data.",
+    "apiMemberCheckFailed": "Failed to save the checked state.",
+    "apiSlotLoadFailed": "Failed to load slot information.",
+    "applyVerification": "Apply for verification",
+    "logoAlt": "ASM 17 logo",
+    "logoTitle": "asm 17",
+    "logoSubtitle": "AI Software Maestro 17"
   },
   "button": {
     "logout": "Logout",

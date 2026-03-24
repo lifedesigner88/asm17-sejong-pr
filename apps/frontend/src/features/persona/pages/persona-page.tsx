@@ -15,7 +15,13 @@ import type { RootLoaderData } from "@/features/auth";
 import { cn } from "@/lib/utils";
 
 import { requestPersonaAsk } from "../utils/api";
-import type { MbtiProfile, PersonaProfile, PersonaQAMessage, TechStackItem } from "../utils/types";
+import type {
+  CreatorPrProfile,
+  MbtiProfile,
+  PersonaProfile,
+  PersonaQAMessage,
+  TechStackItem
+} from "../utils/types";
 
 // ─── Markdown export ─────────────────────────────────────────────────────────
 
@@ -31,6 +37,52 @@ function buildProfileMarkdown(p: import("../utils/types").PersonaProfile): strin
   lines.push(`## Top Values`);
   p.top3_values.forEach((v) => lines.push(`- ${v}`));
   lines.push("");
+
+  if (p.creator_pr) {
+    lines.push(`## Team-Building PR`);
+    lines.push(p.creator_pr.event_note);
+    lines.push("");
+    lines.push(`**Strongest role:** ${p.creator_pr.role_summary}`);
+    lines.push("");
+
+    if (p.creator_pr.quick_facts.length > 0) {
+      lines.push(`**At a glance:**`);
+      p.creator_pr.quick_facts.forEach((fact) => lines.push(`- ${fact.label}: ${fact.value}`));
+      lines.push("");
+    }
+
+    if (p.creator_pr.teammate_roles.length > 0) {
+      lines.push(`**Target teammate roles:**`);
+      p.creator_pr.teammate_roles.forEach((role) => {
+        lines.push(`- ${role.title}: ${role.summary}`);
+        role.bullets.forEach((bullet) => lines.push(`  - ${bullet}`));
+      });
+      lines.push("");
+    }
+
+    if (p.creator_pr.avoid_matches.length > 0) {
+      lines.push(`**Probably not a fit:**`);
+      p.creator_pr.avoid_matches.forEach((item) => lines.push(`- ${item}`));
+      lines.push("");
+    }
+
+    [
+      { label: "Project", section: p.creator_pr.project },
+      { label: "Why now", section: p.creator_pr.why_now },
+      { label: "Why me", section: p.creator_pr.why_me }
+    ].forEach(({ label, section }) => {
+      lines.push(`### ${label} — ${section.title}`);
+      lines.push(section.summary);
+      lines.push("");
+      section.bullets.forEach((bullet) => lines.push(`- ${bullet}`));
+      lines.push("");
+    });
+
+    lines.push(`**CTA:** ${p.creator_pr.cta.title}`);
+    lines.push("");
+    lines.push(p.creator_pr.cta.body);
+    lines.push("");
+  }
 
   if (p.mbti) {
     lines.push(`## MBTI`);
@@ -654,6 +706,252 @@ function TeamUpCard({ profile }: { profile: PersonaProfile }) {
   );
 }
 
+function CreatorPrHighlights({
+  data,
+  showValues,
+  values
+}: {
+  data: CreatorPrProfile;
+  showValues: boolean;
+  values: string[];
+}) {
+  const { t } = useTranslation("persona");
+
+  return (
+    <div className="space-y-4">
+      <SectionPanel label={t("creatorPr.heroRole")} labelClassName="text-emerald-700/80">
+        <p className="text-sm leading-7 text-slate-800">{data.role_summary}</p>
+      </SectionPanel>
+      <div className="grid gap-3 lg:grid-cols-3">
+        {data.quick_facts.map((fact) => (
+          <SectionPanel
+            key={fact.label}
+            label={fact.label}
+            labelClassName="text-slate-500"
+            className="bg-white/82"
+          >
+            <p className="text-sm leading-6 text-slate-800">{fact.value}</p>
+          </SectionPanel>
+        ))}
+      </div>
+      {showValues ? (
+        <SectionPanel label={t("hero.topValues")} labelClassName="text-slate-500">
+          <div className="flex flex-wrap gap-2">
+            {values.map((value) => (
+              <span
+                key={value}
+                className="rounded-full border border-sky-200/80 bg-sky-50/80 px-3 py-1 text-sm font-medium text-slate-700"
+              >
+                {value}
+              </span>
+            ))}
+          </div>
+        </SectionPanel>
+      ) : null}
+    </div>
+  );
+}
+
+function CreatorPrRolesCard({ data }: { data: CreatorPrProfile }) {
+  const { t } = useTranslation("persona");
+
+  return (
+    <Card
+      className={cn(
+        SECTION_CARD_BASE,
+        "border-slate-200 bg-[linear-gradient(145deg,rgba(244,249,252,0.98),rgba(246,250,252,0.95))]"
+      )}
+    >
+      <CardHeader className={SECTION_HEADER_BASE}>
+        <SectionEyebrow className="text-sky-700/80">
+          {t("creatorPr.teamSectionLabel")}
+        </SectionEyebrow>
+        <CardTitle className={cn(SECTION_TITLE_BASE, "max-w-4xl text-slate-950")}>
+          {t("creatorPr.teamSectionTitle")}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className={SECTION_CONTENT_BASE}>
+        <div className="grid gap-4 xl:grid-cols-2">
+          {data.teammate_roles.map((role, index) => (
+            <SectionPanel
+              key={role.title}
+              label={role.title}
+              labelClassName={index === 0 ? "text-sky-700/80" : "text-violet-700/80"}
+              className="bg-white/82"
+            >
+              <p className="text-sm leading-6 text-slate-800">{role.summary}</p>
+              <ul className="mt-3 space-y-1.5">
+                {role.bullets.map((bullet) => (
+                  <li key={bullet} className="flex gap-2 text-sm leading-6 text-slate-700">
+                    <span
+                      className={cn(
+                        "mt-2 h-1.5 w-1.5 shrink-0 rounded-full",
+                        index === 0 ? "bg-sky-400" : "bg-violet-400"
+                      )}
+                    />
+                    {bullet}
+                  </li>
+                ))}
+              </ul>
+            </SectionPanel>
+          ))}
+        </div>
+        <SectionPanel label={t("creatorPr.avoidMatches")} labelClassName="text-amber-700/80">
+          <ul className="space-y-1.5">
+            {data.avoid_matches.map((item) => (
+              <li key={item} className="flex gap-2 text-sm leading-6 text-slate-700">
+                <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-400" />
+                {item}
+              </li>
+            ))}
+          </ul>
+        </SectionPanel>
+      </CardContent>
+    </Card>
+  );
+}
+
+function CreatorPrProjectCard({ data }: { data: CreatorPrProfile }) {
+  const { t } = useTranslation("persona");
+
+  return (
+    <Card
+      className={cn(
+        SECTION_CARD_BASE,
+        "border-slate-200 bg-[linear-gradient(160deg,rgba(252,249,242,0.98),rgba(250,246,235,0.94))]"
+      )}
+    >
+      <CardHeader className={SECTION_HEADER_BASE}>
+        <SectionEyebrow className="text-amber-600">
+          {t("creatorPr.projectSectionLabel")}
+        </SectionEyebrow>
+        <CardTitle className={cn(SECTION_TITLE_BASE, "max-w-4xl text-amber-950")}>
+          {data.project.title}
+        </CardTitle>
+        <p className="text-sm leading-7 text-amber-900/85">{data.project.summary}</p>
+      </CardHeader>
+      <CardContent className={SECTION_CONTENT_BASE}>
+        <ul className="grid gap-3 lg:grid-cols-2">
+          {data.project.bullets.map((bullet) => (
+            <li
+              key={bullet}
+              className="rounded-2xl border border-white/85 bg-white/78 px-4 py-4 text-sm leading-6 text-amber-950/85 shadow-sm"
+            >
+              {bullet}
+            </li>
+          ))}
+        </ul>
+      </CardContent>
+    </Card>
+  );
+}
+
+function CreatorPrWhyCard({
+  label,
+  section,
+  accent
+}: {
+  label: string;
+  section: CreatorPrProfile["why_now"];
+  accent: "sky" | "emerald";
+}) {
+  const accentClasses =
+    accent === "sky"
+      ? {
+          eyebrow: "text-sky-700/80",
+          title: "text-sky-950",
+          summary: "text-sky-900/80",
+          dot: "bg-sky-400"
+        }
+      : {
+          eyebrow: "text-emerald-700/80",
+          title: "text-emerald-950",
+          summary: "text-emerald-900/80",
+          dot: "bg-emerald-400"
+        };
+
+  return (
+    <Card className={cn(SECTION_CARD_BASE, "bg-white/94")}>
+      <CardHeader className={SECTION_HEADER_BASE}>
+        <SectionEyebrow className={accentClasses.eyebrow}>{label}</SectionEyebrow>
+        <CardTitle className={cn(SECTION_TITLE_BASE, accentClasses.title)}>
+          {section.title}
+        </CardTitle>
+        <p className={cn("text-sm leading-7", accentClasses.summary)}>{section.summary}</p>
+      </CardHeader>
+      <CardContent className={SECTION_CONTENT_BASE}>
+        <ul className="space-y-1.5">
+          {section.bullets.map((bullet) => (
+            <li key={bullet} className="flex gap-2 text-sm leading-6 text-slate-700">
+              <span className={cn("mt-2 h-1.5 w-1.5 shrink-0 rounded-full", accentClasses.dot)} />
+              {bullet}
+            </li>
+          ))}
+        </ul>
+      </CardContent>
+    </Card>
+  );
+}
+
+function CreatorPrCtaCard({
+  data,
+  email,
+  emailCopied,
+  onEmailCopy
+}: {
+  data: CreatorPrProfile;
+  email: string | null;
+  emailCopied: boolean;
+  onEmailCopy: () => Promise<void>;
+}) {
+  const { t } = useTranslation("persona");
+
+  return (
+    <Card
+      className={cn(
+        SECTION_CARD_BASE,
+        "border-slate-200 bg-[linear-gradient(155deg,rgba(240,249,245,0.98),rgba(245,250,248,0.95))]"
+      )}
+    >
+      <CardHeader className={SECTION_HEADER_BASE}>
+        <SectionEyebrow className="text-emerald-700/80">
+          {t("creatorPr.ctaSectionLabel")}
+        </SectionEyebrow>
+        <CardTitle className={cn(SECTION_TITLE_BASE, "max-w-4xl text-emerald-950")}>
+          {data.cta.title}
+        </CardTitle>
+        <p className="text-sm leading-7 text-emerald-900/80">{data.cta.body}</p>
+      </CardHeader>
+      <CardContent className={cn(SECTION_CONTENT_BASE, "pt-0")}>
+        <div className="flex flex-wrap items-center gap-3">
+          <a
+            href={HUPOSITORY_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-600/90 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700"
+          >
+            {t("creatorIntro.repoButton")}
+          </a>
+          {email ? (
+            <button
+              type="button"
+              onClick={() => {
+                void onEmailCopy();
+              }}
+              className="inline-flex items-center gap-2 rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"
+            >
+              <span>{email}</span>
+              <span className="text-slate-500">
+                {emailCopied ? t("creatorIntro.emailCopied") : t("creatorPr.contactButton")}
+              </span>
+            </button>
+          ) : null}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 // ─── Q&A panel (auth-gated) ───────────────────────────────────────────────────
 
 function PersonaQAPanel({ personId, lang }: { personId: string; lang: string }) {
@@ -760,6 +1058,7 @@ export function PersonaPage() {
   const lang = i18n.resolvedLanguage?.startsWith("ko") ? "ko" : "en";
   const profile = lang === "ko" && dataKor ? dataKor : dataEng;
   const isCreatorProfile = personaId === "sejong";
+  const creatorPr = isCreatorProfile ? (profile.creator_pr ?? null) : null;
 
   // Very-light tinted backgrounds derived from dominant MBTI colors
   const mbtiColors = profile.mbti ? getMbtiDominantColors(profile.mbti) : [];
@@ -797,11 +1096,17 @@ export function PersonaPage() {
           <CardHeader className={cn(SECTION_HEADER_BASE, "pb-5")}>
             <div className="flex flex-wrap items-center gap-2">
               <Badge variant="outline">{t("creatorIntro.badge")}</Badge>
+              {creatorPr ? <Badge variant="success">{creatorPr.event_badge}</Badge> : null}
             </div>
             <CardTitle className={cn(SECTION_TITLE_BASE, "max-w-3xl")}>
               {t("creatorIntro.title")}
             </CardTitle>
             <p className={cn(SECTION_TEXT_BASE, "max-w-3xl")}>{t("creatorIntro.description")}</p>
+            {creatorPr ? (
+              <SectionNote className="border-sky-200/70 bg-sky-50/65" iconClassName="text-sky-300">
+                {creatorPr.event_note}
+              </SectionNote>
+            ) : null}
             <p className={cn(SECTION_TEXT_BASE, "max-w-3xl")}>{t("creatorIntro.contact")}</p>
             <div className="flex flex-wrap items-center gap-3 pt-1">
               <a
@@ -864,7 +1169,7 @@ export function PersonaPage() {
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex flex-wrap items-center gap-2">
               <Badge variant="outline">{t("hero.badge")}</Badge>
-              <Badge variant="success">{personaId}</Badge>
+              <Badge variant="success">{creatorPr ? creatorPr.event_badge : personaId}</Badge>
               <span className={SECTION_SUBTEXT_BASE}>{title}</span>
             </div>
           </div>
@@ -919,18 +1224,22 @@ export function PersonaPage() {
           )}
         </CardHeader>
         <CardContent className={SECTION_CONTENT_BASE}>
-          <SectionPanel label={t("hero.topValues")} labelClassName="text-slate-500">
-            <div className="flex flex-wrap gap-2">
-              {profile.top3_values.map((v) => (
-                <span
-                  key={v}
-                  className="rounded-full border border-sky-200/80 bg-sky-50/80 px-3 py-1 text-sm font-medium text-slate-700"
-                >
-                  {v}
-                </span>
-              ))}
-            </div>
-          </SectionPanel>
+          {creatorPr ? (
+            <CreatorPrHighlights data={creatorPr} showValues={true} values={profile.top3_values} />
+          ) : (
+            <SectionPanel label={t("hero.topValues")} labelClassName="text-slate-500">
+              <div className="flex flex-wrap gap-2">
+                {profile.top3_values.map((v) => (
+                  <span
+                    key={v}
+                    className="rounded-full border border-sky-200/80 bg-sky-50/80 px-3 py-1 text-sm font-medium text-slate-700"
+                  >
+                    {v}
+                  </span>
+                ))}
+              </div>
+            </SectionPanel>
+          )}
 
           {/* Copy CTA */}
           <button
@@ -953,6 +1262,34 @@ export function PersonaPage() {
           </button>
         </CardContent>
       </Card>
+
+      {creatorPr ? <CreatorPrRolesCard data={creatorPr} /> : null}
+
+      {creatorPr ? <CreatorPrProjectCard data={creatorPr} /> : null}
+
+      {creatorPr ? (
+        <div className="grid gap-4 xl:grid-cols-2">
+          <CreatorPrWhyCard
+            label={t("creatorPr.whyNow")}
+            section={creatorPr.why_now}
+            accent="sky"
+          />
+          <CreatorPrWhyCard
+            label={t("creatorPr.whyMe")}
+            section={creatorPr.why_me}
+            accent="emerald"
+          />
+        </div>
+      ) : null}
+
+      {creatorPr ? (
+        <CreatorPrCtaCard
+          data={creatorPr}
+          email={email}
+          emailCopied={emailCopied}
+          onEmailCopy={handleEmailCopy}
+        />
+      ) : null}
 
       <TeamUpCard profile={profile} />
 

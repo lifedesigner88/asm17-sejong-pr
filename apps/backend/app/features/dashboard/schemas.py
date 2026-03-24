@@ -18,6 +18,7 @@ class DashboardGrid(BaseModel):
     cells: list[SlotCell]
     total_slots: int
     filled_slots: int
+    approved_member_count: int
 
 
 class MemberCard(BaseModel):
@@ -25,7 +26,19 @@ class MemberCard(BaseModel):
     seat: int
     user_id: int | None
     name: str | None
+    birth_year: int | None
+    residence: str | None
     gender: str | None
     email: str | None
     github_address: str | None
     notion_url: str | None
+    is_checked: bool = False
+
+
+class MemberCheckUpdate(BaseModel):
+    is_checked: bool
+
+
+class MemberCheckState(BaseModel):
+    target_user_id: int
+    is_checked: bool

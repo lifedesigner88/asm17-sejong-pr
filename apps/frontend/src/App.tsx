@@ -18,13 +18,17 @@ import { cn } from "@/lib/utils";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
 
-type HealthLoaderData = { initialStatus: string };
-type HealthActionData = { result: string };
+type HealthLoaderData = { initialStatus: string; initialDurationMs: number | null };
+type HealthActionData = { result: string; durationMs: number | null };
 type NavigationItem = {
   to: string;
   label: string;
   disabled?: boolean;
   hoverTitle?: string;
+};
+type HomeStep = {
+  title: string;
+  text: string;
 };
 
 async function requestHealthStatus(): Promise<string> {
@@ -36,6 +40,33 @@ async function requestHealthStatus(): Promise<string> {
   }
   const data = (await response.json()) as { status?: string };
   return data.status ?? "unknown";
+}
+
+function nowMs(): number {
+  return typeof performance !== "undefined" ? performance.now() : Date.now();
+}
+
+function getNavigationItemClasses(item: NavigationItem, isActive: boolean): string {
+  if (item.to === "/seoul/dashboard") {
+    return cn(
+      "rounded-2xl border border-sky-200/80 bg-[linear-gradient(135deg,rgba(180,226,255,0.96),rgba(122,197,255,0.92))] px-4 py-3 text-sm font-semibold text-sky-950 shadow-sm transition hover:brightness-[0.98]",
+      isActive && "shadow-md ring-1 ring-sky-200/90"
+    );
+  }
+
+  if (item.to === "/persona/sejong") {
+    return cn(
+      "rounded-2xl border border-rose-200/80 bg-[linear-gradient(135deg,rgba(255,246,246,0.95),rgba(255,233,236,0.92))] px-4 py-3 text-sm font-medium text-rose-900 transition hover:bg-rose-100/90 hover:text-rose-950",
+      isActive && "shadow-sm ring-1 ring-rose-200/80"
+    );
+  }
+
+  return cn(
+    "rounded-2xl px-4 py-3 text-sm font-medium transition",
+    isActive
+      ? "bg-foreground text-background shadow-sm"
+      : "text-foreground/75 hover:bg-black/5 hover:text-foreground"
+  );
 }
 
 export function App() {
@@ -117,7 +148,7 @@ export function App() {
                     key={item.to}
                     aria-disabled="true"
                     title={item.hoverTitle}
-                    className="cursor-not-allowed rounded-2xl border border-dashed border-border/70 px-4 py-3 text-sm font-medium text-foreground/40 transition hover:border-foreground/25 hover:bg-black/5"
+                    className="cursor-not-allowed rounded-2xl border border-dashed border-slate-200/90 bg-slate-100/85 px-4 py-3 text-sm font-medium text-slate-400 shadow-inner transition"
                   >
                     {item.label}
                   </span>
@@ -125,14 +156,7 @@ export function App() {
                   <NavLink
                     key={item.to}
                     to={item.to}
-                    className={({ isActive }) =>
-                      cn(
-                        "rounded-2xl px-4 py-3 text-sm font-medium transition",
-                        isActive
-                          ? "bg-foreground text-background shadow-sm"
-                          : "text-foreground/75 hover:bg-black/5 hover:text-foreground"
-                      )
-                    }
+                    className={({ isActive }) => getNavigationItemClasses(item, isActive)}
                     end={item.to === "/"}
                   >
                     {item.label}
@@ -144,14 +168,6 @@ export function App() {
               {sessionUser ? (
                 <LogoutButton className="w-full rounded-2xl border border-stone-200 bg-white/88 px-4 py-3 text-sm font-semibold text-stone-700 shadow-sm transition hover:bg-white" />
               ) : null}
-              <a
-                href={KAKAO_OPEN_CHAT_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="block rounded-xl px-1 text-sm text-muted-foreground transition hover:text-foreground"
-              >
-                {t("sidebar.openChat")}
-              </a>
               <a
                 href={KAKAO_OPEN_CHAT_URL}
                 target="_blank"
@@ -173,15 +189,19 @@ export function App() {
 }
 
 export function homeLoader(): HealthLoaderData {
-  return { initialStatus: "not checked" };
+  return { initialStatus: "not checked", initialDurationMs: null };
 }
 
 export async function homeAction(): Promise<HealthActionData> {
+  const startedAt = nowMs();
   try {
     const result = await requestHealthStatus();
-    return { result };
+    return { result, durationMs: Math.max(0, Math.round(nowMs() - startedAt)) };
   } catch {
-    return { result: "request failed" };
+    return {
+      result: "request failed",
+      durationMs: Math.max(0, Math.round(nowMs() - startedAt))
+    };
   }
 }
 
@@ -193,99 +213,225 @@ export function HomePage() {
   const navigation = useNavigation();
   const loading = navigation.state === "submitting";
   const result = actionData?.result ?? loaderData.initialStatus;
+  const durationMs = actionData?.durationMs ?? loaderData.initialDurationMs;
   const tone = result === "ok" ? "success" : result === "request failed" ? "warn" : "default";
+  const statusLabel =
+    result === "ok"
+      ? t("home.runtimeStatusOk")
+      : result === "request failed"
+        ? t("home.runtimeStatusFailed")
+        : t("home.runtimeStatusIdle");
   const sessionUser = rootData.sessionUser;
-
-  const cards = [
-    { title: t("home.cards.authTitle"), text: t("home.cards.authText") },
-    { title: t("home.cards.uiTitle"), text: t("home.cards.uiText") },
-    { title: t("home.cards.nextTitle"), text: t("home.cards.nextText") }
+  const keywords = t("home.keywords", {
+    returnObjects: true,
+    defaultValue: []
+  }) as string[];
+  const flowSteps = t("home.flowSteps", {
+    returnObjects: true,
+    defaultValue: []
+  }) as HomeStep[];
+  const featureItems = t("home.featureItems", {
+    returnObjects: true,
+    defaultValue: []
+  }) as string[];
+  const featuresSummary = t("home.featuresSummary");
+  const futureSummary = t("home.futureSummary");
+  const futureItems = t("home.futureItems", {
+    returnObjects: true,
+    defaultValue: []
+  }) as string[];
+  const flowAccentClasses = [
+    "bg-amber-500",
+    "bg-rose-500",
+    "bg-emerald-500",
+    "bg-sky-500",
+    "bg-violet-500",
+    "bg-slate-800"
   ];
+  const keywordClasses = [
+    "border-amber-200 bg-amber-50 text-amber-900",
+    "border-emerald-200 bg-emerald-50 text-emerald-900",
+    "border-sky-200 bg-sky-50 text-sky-900",
+    "border-rose-200 bg-rose-50 text-rose-900",
+    "border-violet-200 bg-violet-50 text-violet-900",
+    "border-slate-200 bg-slate-50 text-slate-800"
+  ];
+  const getKeywordClass = (keyword: string, index: number) =>
+    keyword.toLowerCase().includes("notion")
+      ? "border-slate-200 bg-white text-slate-900 shadow-sm"
+      : keywordClasses[index % keywordClasses.length];
 
   return (
     <div className="space-y-6">
-      <ShellCard className="overflow-hidden bg-[radial-gradient(circle_at_top_left,rgba(20,184,166,0.12),transparent_34%),linear-gradient(180deg,rgba(255,255,255,0.94),rgba(247,244,238,0.96))]">
-        <div className="grid gap-8 lg:grid-cols-[1.25fr_0.75fr]">
-          <div className="space-y-4">
-            <StatusPill label={t("home.pill")} />
-            <div className="space-y-3">
-              <h2 className="max-w-xl text-3xl font-semibold tracking-[-0.04em] text-foreground sm:text-4xl">
+      <ShellCard className="relative overflow-hidden border-white/70 bg-[linear-gradient(135deg,rgba(255,251,244,0.98),rgba(241,249,245,0.96))] p-0">
+        <div className="pointer-events-none absolute inset-0">
+          <div className="absolute top-[-24px] right-[-18px] h-44 w-44 rounded-full bg-amber-300/45 blur-3xl" />
+          <div className="absolute bottom-[-30px] left-[-12px] h-40 w-40 rounded-full bg-emerald-300/45 blur-3xl" />
+          <div className="absolute top-1/3 left-1/2 h-36 w-36 -translate-x-1/2 rounded-full bg-sky-200/25 blur-3xl" />
+          <div className="absolute inset-x-0 top-0 h-px bg-white/80" />
+        </div>
+        <div className="relative grid gap-6 p-6 lg:grid-cols-[1.24fr_0.76fr] lg:p-8">
+          <div className="space-y-5">
+            <div className="flex flex-wrap gap-2">
+              <StatusPill label={t("home.pill")} />
+              <StatusPill
+                label={
+                  sessionUser
+                    ? t("home.loggedIn", { userId: sessionUser.user_id })
+                    : t("home.guestMode")
+                }
+                tone={sessionUser ? "success" : "default"}
+              />
+              {sessionUser?.is_admin ? (
+                <StatusPill label={t("home.adminAccess")} tone="success" />
+              ) : null}
+            </div>
+
+            <div className="space-y-3.5">
+              <h2 className="max-w-3xl text-[1.55rem] font-semibold tracking-[-0.05em] text-foreground sm:text-[1.75rem] lg:text-[1.95rem]">
                 {t("home.heading")}
               </h2>
-              <p className="max-w-2xl text-sm leading-7 text-muted-foreground">
+              <p className="max-w-3xl text-[13px] leading-6 text-muted-foreground sm:text-sm">
                 {t("home.description")}
               </p>
-              <div className="flex flex-wrap items-center gap-3">
-                <StatusPill
-                  label={
-                    sessionUser
-                      ? t("home.loggedIn", { userId: sessionUser.user_id })
-                      : t("home.guestMode")
-                  }
-                  tone={sessionUser ? "success" : "default"}
-                />
-                {sessionUser?.is_admin ? (
-                  <StatusPill label={t("home.adminAccess")} tone="success" />
-                ) : null}
+              <p className="inline-flex max-w-full rounded-full border border-rose-200/80 bg-rose-50/90 px-3 py-1.5 text-[11px] font-semibold text-rose-900">
+                {t("home.visibilityNote")}
+              </p>
+              <div className="grid grid-cols-[repeat(auto-fit,minmax(132px,1fr))] gap-2">
+                {keywords.map((keyword, index) => (
+                  <span
+                    key={keyword}
+                    className={cn(
+                      "flex min-h-[34px] w-full items-center justify-center rounded-[18px] border px-3 py-1.5 text-center text-[11px] font-semibold leading-4 tracking-[0.02em]",
+                      getKeywordClass(keyword, index)
+                    )}
+                  >
+                    {keyword}
+                  </span>
+                ))}
               </div>
-            </div>
-            <div className="flex flex-wrap gap-3">
-              <Form method="post">
-                <Button type="submit" disabled={loading} size="lg">
-                  {loading ? t("home.checkingBackend") : t("home.checkBackend")}
-                </Button>
-              </Form>
-              {sessionUser ? (
-                <LogoutButton />
-              ) : (
-                <>
-                  <NavLink to="/auth/signup">
-                    <Button size="lg" variant="outline">
-                      {t("home.createAccount")}
-                    </Button>
-                  </NavLink>
-                  <NavLink to="/auth/login">
-                    <Button size="lg" variant="outline">
-                      {t("nav.login")}
-                    </Button>
-                  </NavLink>
-                </>
-              )}
             </div>
           </div>
 
-          <div className="rounded-[22px] border border-black/5 bg-white/80 p-5">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                {t("home.runtimeSignal")}
-              </span>
-              <StatusPill label={result} tone={tone} />
-            </div>
-            <dl className="mt-6 space-y-4 text-sm">
-              <div className="flex items-start justify-between gap-4 border-b border-border/70 pb-4">
-                <dt className="text-muted-foreground">{t("home.backendApi")}</dt>
-                <dd className="font-medium text-foreground">{API_BASE_URL}</dd>
-              </div>
-              <div className="flex items-start justify-between gap-4 border-b border-border/70 pb-4">
-                <dt className="text-muted-foreground">{t("home.authMode")}</dt>
-                <dd className="font-medium text-foreground">{t("home.authModeValue")}</dd>
-              </div>
+          <div className="lg:flex lg:justify-end">
+            <div className="w-full rounded-[20px] border border-dashed border-slate-300/80 bg-white/82 p-3.5 shadow-sm lg:w-[260px] xl:w-[300px]">
               <div className="flex items-start justify-between gap-4">
-                <dt className="text-muted-foreground">{t("home.healthState")}</dt>
-                <dd className="font-medium text-foreground">{result}</dd>
+                <div>
+                  <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                    {t("home.runtimeLabel")}
+                  </div>
+                  <h3 className="mt-1 text-sm font-semibold tracking-[-0.03em] text-slate-950">
+                    {t("home.runtimeTitle")}
+                  </h3>
+                </div>
+                <StatusPill label={statusLabel} tone={tone} />
               </div>
-            </dl>
+
+              <div className="mt-3 rounded-2xl border border-slate-200/70 bg-slate-50/90 px-3 py-2.5">
+                <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                  {t("home.runtimeLatency")}
+                </div>
+                <div className="mt-1 text-[1.15rem] font-semibold tracking-[-0.04em] text-slate-950">
+                  {durationMs == null
+                    ? t("home.runtimeLatencyIdle")
+                    : t("home.runtimeLatencyValue", { ms: durationMs })}
+                </div>
+              </div>
+
+              <div className="mt-3">
+                <Form method="post">
+                  <Button
+                    type="submit"
+                    disabled={loading}
+                    size="sm"
+                    variant="outline"
+                    className="w-full rounded-full border-emerald-300 bg-emerald-50 text-emerald-900 hover:bg-emerald-100 hover:text-emerald-950"
+                  >
+                    {loading ? t("home.runtimeButtonLoading") : t("home.runtimeButton")}
+                  </Button>
+                </Form>
+              </div>
+            </div>
           </div>
         </div>
       </ShellCard>
 
-      <div className="grid gap-4 md:grid-cols-3">
-        {cards.map((item) => (
-          <ShellCard key={item.title} className="bg-white/88 p-5">
-            <h3 className="text-base font-semibold tracking-[-0.02em]">{item.title}</h3>
-            <p className="mt-2 text-sm leading-6 text-muted-foreground">{item.text}</p>
-          </ShellCard>
-        ))}
+      <ShellCard className="bg-white/90">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+              {t("home.flowLabel")}
+            </div>
+            <h3 className="mt-2.5 text-[1.35rem] font-semibold tracking-[-0.04em] text-slate-950">
+              {t("home.flowTitle")}
+            </h3>
+          </div>
+        </div>
+        <ol className="mt-6 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+          {flowSteps.map((step, index) => (
+            <li
+              key={step.title}
+              className="rounded-[22px] border border-slate-200/80 bg-[linear-gradient(160deg,rgba(255,255,255,0.95),rgba(248,250,252,0.96))] px-4 py-4 shadow-sm"
+            >
+              <div className="flex items-center gap-3">
+                <span
+                  className={cn(
+                    "inline-flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold text-white",
+                    flowAccentClasses[index % flowAccentClasses.length]
+                  )}
+                >
+                  {index + 1}
+                </span>
+                <h4 className="text-sm font-semibold tracking-[-0.02em] text-slate-950">
+                  {step.title}
+                </h4>
+              </div>
+              <p className="mt-2.5 text-[13px] leading-5 text-muted-foreground">{step.text}</p>
+            </li>
+          ))}
+        </ol>
+      </ShellCard>
+
+      <div className="grid gap-4 xl:grid-cols-[1.02fr_0.98fr]">
+        <ShellCard className="bg-[linear-gradient(160deg,rgba(248,250,252,0.98),rgba(255,255,255,0.95))]">
+          <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+            {t("home.featuresLabel")}
+          </div>
+          <h3 className="mt-2.5 text-[1.35rem] font-semibold tracking-[-0.04em] text-slate-950">
+            {t("home.featuresTitle")}
+          </h3>
+          <p className="mt-2 text-[13px] leading-6 text-muted-foreground">{featuresSummary}</p>
+          <div className="mt-4 grid grid-cols-[repeat(auto-fit,minmax(132px,1fr))] gap-2.5">
+            {featureItems.map((item) => (
+              <span
+                key={item}
+                className="flex min-h-[38px] w-full items-center justify-center rounded-[18px] border border-slate-200/80 bg-white/84 px-3 py-2 text-center text-[11px] font-semibold leading-4 text-slate-800 shadow-sm"
+              >
+                {item}
+              </span>
+            ))}
+          </div>
+        </ShellCard>
+
+        <ShellCard className="bg-[linear-gradient(160deg,rgba(240,246,255,0.98),rgba(255,250,240,0.96))]">
+          <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-sky-700/80">
+            {t("home.futureLabel")}
+          </div>
+          <h3 className="mt-2.5 text-[1.35rem] font-semibold tracking-[-0.04em] text-slate-950">
+            {t("home.futureTitle")}
+          </h3>
+          <p className="mt-2 text-[13px] leading-6 text-muted-foreground">{futureSummary}</p>
+          <div className="mt-4 grid grid-cols-[repeat(auto-fit,minmax(132px,1fr))] gap-2.5">
+            {futureItems.map((item) => (
+              <span
+                key={item}
+                className="flex min-h-[38px] w-full items-center justify-center rounded-[18px] border border-sky-200/80 bg-white/84 px-3 py-2 text-center text-[11px] font-semibold leading-4 text-slate-800 shadow-sm"
+              >
+                {item}
+              </span>
+            ))}
+          </div>
+        </ShellCard>
       </div>
     </div>
   );
